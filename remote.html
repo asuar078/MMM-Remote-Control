@@ -25,7 +25,7 @@
             <div class="fill">
                 <div class="menu above-fold">
                     <!-- general back button -->
-                    <div id="back-button" class="menu-element hidden button power-menu edit-menu settings-menu add-module-menu update-menu classes-menu alert-menu">
+                    <div id="back-button" class="menu-element hidden button power-menu edit-menu settings-menu add-module-menu update-menu classes-menu alert-menu flora-menu">
                         <span class="fa fa-fw fa-angle-left" aria-hidden="true"></span>
                         <!-- <span class="text">%%TRANSLATE:BACK%%</span> -->
                     </div>
@@ -90,8 +90,17 @@
                         <span class="fa fa-fw fa-info-circle" aria-hidden="true"></span>
                         <span class="text">%%TRANSLATE:UPDATE_AVAILABLE%%</span>
                     </div>
+                    <!-- module menu -->
+                    <div id="flora-scan-button" class="menu-element hidden button flora-menu">
+                        <span class="fa fa-fw fa-refresh" aria-hidden="true"></span>
+                        <span class="text">Scan for Monitors </span>
+                    </div>
+                    <div id="miflora-save-config" class="menu-element hidden button flora-menu">
+                        <span class="fa fa-fw fa-save" aria-hidden="true"></span>
+                        <span class="text">%%TRANSLATE:SAVE%%</span>
+                    </div>
                 </div>
-                <div id="below-fold" class="below-fold menu-element hidden edit-menu settings-menu add-module-menu update-menu classes-menu alert-menu main-menu power-menu">
+                <div id="below-fold" class="below-fold menu-element hidden edit-menu settings-menu add-module-menu update-menu classes-menu alert-menu main-menu power-menu flora-menu">
                     <div class="menu-container">
                         <!-- main menu -->
                         <div id="power-button" class="menu-element hidden button main-menu">
@@ -130,6 +139,11 @@
                         <div id="mirror-link-button" class="menu-element hidden button main-menu">
                             <span class="fa fa-fw fa-external-link " aria-hidden="true"></span>
                             <span class="text">%%TRANSLATE:VIEW_MIRROR%%</span>
+                        </div>
+                        <div id="flora-button" class="menu-element hidden button main-menu">
+                            <span class="fa fa-fw fa-tree" aria-hidden="true"></span>
+                            <span class="text">Flora Monitor</span>
+                            <span class="fa fa-fw fa-angle-right" aria-hidden="true"></span>
                         </div>
                         <!-- power menu -->
                         <div id="shut-down-button" class="menu-element hidden button power-menu">
@@ -258,6 +272,20 @@
                             <span class="text">%%TRANSLATE:NO_MODULES_LOADED%%</span>
                         </div>
                         <div id="update-module-results" class="results small">
+                            <!-- elements are inserted here -->
+                        </div>
+                    </div>
+                    <!-- below fold part of flora menu -->
+                    <div id="flora-monitor-container" class="result-list menu-element hidden flora-menu">
+                        <div id="flora-monitor-loading">
+                            <span class="fa fa-fw fa-spinner fa-pulse"></span>
+                            <span class="text">%%TRANSLATE:LOADING%%</span>
+                        </div>
+                        <div id="flora-monitor-empty" class="hidden">
+                            <span class="fa fa-fw fa-exclamation-circle"></span>
+                            <span class="text">%%TRANSLATE:NO_MODULES_LOADED%%</span>
+                        </div>
+                        <div id="flora-monitor-results" class="results small">
                             <!-- elements are inserted here -->
                         </div>
                     </div>

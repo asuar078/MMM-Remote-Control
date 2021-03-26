@@ -22,6 +22,7 @@ var Remote = {
     addModule: "",
     changedModules: [],
     deletedModules: [],
+    mifloraMonitors: [],
     autoHideTimer: undefined,
     autoHideDelay: 1000, // ms
 
@@ -78,10 +79,18 @@ var Remote = {
                 } else if (payload.query.data === "translations") {
                     this.translations = payload.data;
                     this.onTranslationsLoaded();
-                } else {
+                }  else {
                     this.loadListCallback(payload);
                 }
                 return;
+            }
+            if ("query" in payload) {
+                if ("data" in payload.query) {
+                    if (payload.query.data === "mifloraFriendlyNames") {
+                        this.loadListCallback(payload);
+                        // this.mifloraFriendlyNameCallback(payload.result)
+                    }
+                }
             }
             if ("code" in payload && payload.code === "restart") {
             	var chlog = new showdown.Converter()
@@ -310,7 +319,11 @@ var Remote = {
         if (newMenu === "update-menu") {
             this.loadModulesToUpdate();
         }
-        
+        if (newMenu === "flora-menu") {
+            this.mifloraLoadFriendlyNames();
+        }
+
+
         if (newMenu === "main-menu") {
         	this.loadList("config-modules", "config", function(parent,configData) {
                 
@@ -823,7 +836,7 @@ var Remote = {
                 console.log(value);
                 if (value) {
                     input.checked = true;
-                    console.log(input.checked);
+                    // console.log(input.checked);
                 }
 
                 self.createVisualCheckbox(key, label, input, "fa-check-square-o", false);
@@ -1381,6 +1394,67 @@ var Remote = {
         }
     },
 
+    mifloraFriendlyNameCallback: function (result) {
+        var self = this;
+        console.log(`friendly name callback ${JSON.stringify(result, undefined, 4)}`)
+
+        this.mifloraMonitors = result
+        for (var i = 0; i < result.length; i++) {
+            var innerWrapper = document.createElement("div");
+            innerWrapper.className = "miflora-monitor-line";
+
+            var moduleBox = self.createSymbolText("fa fa-fw fa-pencil", self.formatName(result[i].name), function(event) {
+                // var i = event.currentTarget.id.replace("edit-monitor-", "");
+                // self.createConfigPopup(i);
+            }, "span");
+            moduleBox.id = "edit-monitor-" + i;
+            innerWrapper.appendChild(moduleBox);
+
+            if (self.changedModules.indexOf(i) !== -1) {
+                innerWrapper.appendChild(self.createChangedWarning());
+            }
+
+            var remove = Remote.createSymbolText("fa fa-fw fa-times-circle", this.translate("DELETE_ENTRY"), function(event) {
+                // var i = event.currentTarget.parentNode.firstChild.id.replace("edit-monitor-", "");
+                // // self.deletedModules.push(parseInt(i));
+                // var thisElement = event.currentTarget;
+                // thisElement.parentNode.parentNode.removeChild(thisElement.parentNode);
+            }, "span");
+            remove.className += " type-edit";
+            innerWrapper.appendChild(remove);
+
+            parent.appendChild(innerWrapper);
+        }
+    },
+
+    mifloraLoadFriendlyNames: function() {
+        var self = this;
+
+        console.log("Loading friendly names...");
+        this.mifloraMonitors = []
+
+        // this.sendSocketNotification("REMOTE_ACTION", { data: "mifloraFriendlyNames" });
+        this.loadList("flora-monitor", "mifloraFriendlyNames", function(parent, mifloraData) {
+            console.log(`get callback ${mifloraData}`)
+            // var moduleData = mifloraData;
+            // if (self.addModule) {
+            //     var name = self.addModule;
+            //     // we came here from adding a module
+            //     self.get("get", "data=defaultConfig&module=" + name, function(response) {
+            //         var newData = JSON.parse(response);
+            //         moduleData.push({ module: name, config: newData });
+            //         var index = moduleData.length - 1;
+            //         self.changedModules.push(index);
+            //         self.appendModuleEditElements(parent, moduleData);
+            //         self.createConfigPopup(index);
+            //     });
+            //     self.addModule = "";
+            // } else {
+            //     self.appendModuleEditElements(parent, moduleData);
+            // }
+        });
+    },
+
     loadModulesToUpdate: function() {
         var self = this;
 
@@ -1622,6 +1696,10 @@ var buttons = {
     "alert-button": function() {
         window.location.hash = "alert-menu";
     },
+    "flora-button": function() {
+        console.log("flora button")
+        window.location.hash = "flora-menu";
+    },
 
     // settings menu buttons
     "brightness-reset": function() {
@@ -1757,7 +1835,16 @@ var buttons = {
     },
     "hide-alert-button": function() {
         Remote.sendSocketNotification("REMOTE_ACTION", { action: "HIDE_ALERT" });
-    }
+    },
+
+    // flora menu
+    "flora-scan-button": function() {
+        Remote.sendSocketNotification("REMOTE_ACTION", {action: "MIFLORA_SCAN"});
+    },
+    // "flora-friendly-button": function () {
+    //     console.log("sending friendly request")
+    //     Remote.mifloraLoadFriendlyNames();
+    // },
 };
 
 // Initialize socket connection

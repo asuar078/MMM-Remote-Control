@@ -35,7 +35,7 @@ Module.register("MMM-Remote-Control", {
     },
 
     notificationReceived: function(notification, payload, sender) {
-        // Log.log(this.name + " received a module notification: " + notification + " from sender: " + sender.name);
+        Log.log(this.name + " received a module notification: " + notification);
         if (notification === "DOM_OBJECTS_CREATED") {
             this.sendSocketNotification("REQUEST_DEFAULT_SETTINGS");
             this.sendCurrentData();
@@ -53,6 +53,7 @@ Module.register("MMM-Remote-Control", {
 
     // Override socket notification handler.
     socketNotificationReceived: function(notification, payload) {
+        Log.log(this.name + " received a socket notification: " + notification);
         if (notification === "UPDATE") {
             this.sendCurrentData();
         }  
@@ -125,6 +126,9 @@ Module.register("MMM-Remote-Control", {
         }
         if (notification === "HIDE_ALERT") {
             this.sendNotification(notification);
+        }
+        if (notification === "MIFLORA_SCAN") {
+            this.sendNotification(notification, payload)
         }
         if (notification === "HIDE" || notification === "SHOW" || notification === "TOGGLE") {
             let options = { lockString: this.identifier };

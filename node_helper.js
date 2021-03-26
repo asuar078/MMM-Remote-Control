@@ -19,6 +19,7 @@ const express = require("express");
 const _ = require("lodash");
 
 var defaultModules = require(path.resolve(__dirname + "/../default/defaultmodules.js"));
+var miflora = require(path.resolve(__dirname + "/../MMM-miflora/miflora_poller.js"));
 
 Module = {
     configDefaults: {},
@@ -565,6 +566,13 @@ module.exports = NodeHelper.create(Object.assign({
                 this.sendResponse(res, undefined, { query: query, result: this.userPresence });
                 return;
             }
+            if (query.data === "mifloraFriendlyNames") {
+                console.log('node helper friendly name request')
+                const friendly = miflora.getFriendlyLookup()
+                console.log(friendly)
+                this.sendResponse(res, undefined, { query: query, result: friendly });
+                return;
+            }
             // Unknown Command, Return Error
             this.sendResponse(res, "Unknown or Bad Command.", query);
         },
@@ -770,6 +778,11 @@ module.exports = NodeHelper.create(Object.assign({
             }
             if (query.action === "UPDATE") {
                 self.updateModule(decodeURI(query.module), res);
+                return true;
+            }
+            if (query.action === "MIFLORA_SCAN") {
+                this.sendSocketNotification(query.action, {});
+                this.sendResponse(res);
                 return true;
             }
             if (query.action === 'NOTIFICATION') {
@@ -1072,6 +1085,7 @@ module.exports = NodeHelper.create(Object.assign({
 
         socketNotificationReceived: function(notification, payload) {
             var self = this;
+            console.log("remote node helper received socket notification: " + notification + " payload " + payload)
 
             if (notification === "CURRENT_STATUS") {
                 this.configData = payload;

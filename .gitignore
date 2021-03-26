@@ -38,3 +38,4 @@ settings.json
 # Package Lock File
 package-lock.json
 
+.idea
