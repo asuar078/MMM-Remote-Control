@@ -179,6 +179,18 @@ a {
     white-space: nowrap;
 }
 
+#flora-monitor-results .module-line {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+#flora-monitor-results .module-line>span {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
 #update-module-results .module-line {
     display: flex;
     justify-content: space-between;
