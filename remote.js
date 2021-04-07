@@ -69,6 +69,8 @@ var Remote = {
             if ("data" in payload) {
                 if (payload.query.data === "config_update") {
                     this.saveConfigCallback(payload);
+                } else if (payload.query.data === "miflora_config") {
+                  this.mifloraConfigCallback();
                 } else if (payload.query.data === "saves") {
                     this.undoConfigMenuCallback(payload)
                 } else if (payload.query.data === "mmUpdateAvailable") {
@@ -1672,6 +1674,34 @@ var Remote = {
         self.loadConfigModules();
     },
 
+    mifloraSaveConfig: function () {
+        var self = this;
+
+        // prevent saving before current saving is finished
+        if (this.saving) {
+            return;
+        }
+
+        var saveButton = document.getElementById("miflora-save-config");
+        saveButton.className = saveButton.className.replace(" highlight", "");
+        this.saving = true;
+        this.setStatus("loading");
+        var configData = this.mifloraMonitors
+        this.sendSocketNotification("MIFLORA_NEW_CONFIG", configData);
+    },
+
+    mifloraConfigCallback: function (result) {
+        var self = this;
+
+        if (result.success) {
+            self.offerReload(self.translate("DONE"));
+        } else {
+            self.setStatus("error");
+        }
+        self.saving = false;
+        self.mifloraLoadFriendlyNames()
+    },
+
     onTranslationsLoaded: function () {
         this.createDynamicMenu();
     },
@@ -1945,8 +1975,12 @@ var buttons = {
     },
 
     // flora menu
-    "flora-scan-button": function () {
+    "miflora-scan-button": function () {
         Remote.sendSocketNotification("REMOTE_ACTION", {action: "MIFLORA_SCAN"});
+    },
+
+    "miflora-save-config": function () {
+        Remote.mifloraSaveConfig();
     },
     // "flora-friendly-button": function () {
     //     console.log("sending friendly request")

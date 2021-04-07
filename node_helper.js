@@ -415,6 +415,12 @@ module.exports = NodeHelper.create(Object.assign({
             return config;
         },
 
+        mifloraConfigPost: function (query, payload, res) {
+
+            miflora.editFriendlyLookup(payload)
+            this.sendResponse(res, undefined, { query: query, result: true });
+        },
+
         answerPost: function(query, req, res) {
             var self = this;
 
@@ -1139,6 +1145,9 @@ module.exports = NodeHelper.create(Object.assign({
             }
             if (notification === "NEW_CONFIG") {
                 this.answerPost({ data: "config" }, { body: payload }, { isSocket: true });
+            }
+            if (notification === "MIFLORA_NEW_CONFIG") {
+                this.mifloraConfigPost({ data: "miflora_config" }, payload, {isSocket: true});
             }
             if (notification === "REMOTE_CLIENT_CONNECTED") {
                 this.sendSocketNotification("REMOTE_CLIENT_CONNECTED");
