@@ -418,6 +418,7 @@ module.exports = NodeHelper.create(Object.assign({
         mifloraConfigPost: function (query, payload, res) {
 
             miflora.editFriendlyLookup(payload)
+            console.log("miflora edit friendly names complete sending reply")
             this.sendResponse(res, undefined, { query: query, result: true });
         },
 

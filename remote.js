@@ -89,9 +89,10 @@ var Remote = {
             if ("query" in payload) {
                 if ("data" in payload.query) {
                     if (payload.query.data === "mifloraFriendlyNames") {
-                        console.log(payload)
-                        // this.loadListCallback(payload);
                         this.mifloraFriendlyNameCallback(payload)
+                    }
+                    if (payload.query.data === "miflora_config") {
+                        this.mifloraConfigCallback(payload)
                     }
                 }
             }
@@ -140,7 +141,7 @@ var Remote = {
         Object.keys(buttons).forEach(key => {
             document.getElementById(key).addEventListener("click", buttons[key], false);
         });
-        console.log("buttons loaded");
+        // console.log("buttons loaded");
     },
 
     translate: function (pattern) {
@@ -505,7 +506,7 @@ var Remote = {
     },
 
     loadList: function (listname, dataId, callback) {
-        console.log(`load list: ${listname} : ${dataId}`)
+        // console.log(`load list: ${listname} : ${dataId}`)
         var self = this;
 
         var loadingIndicator = document.getElementById(listname + "-loading");
@@ -523,7 +524,7 @@ var Remote = {
 
     loadListCallback: function (result) {
         var self = this;
-        console.log("load list callback hit")
+        // console.log("load list callback hit")
 
         var loadingIndicator = document.getElementById(result.query.listname + "-loading");
         var emptyIndicator = document.getElementById(result.query.listname + "-empty");
@@ -848,7 +849,7 @@ var Remote = {
                 var input = self.createConfigInput(key, value, true);
                 input.type = "checkbox";
                 label.appendChild(input);
-                console.log(value);
+                // console.log(value);
                 if (value) {
                     input.checked = true;
                     // console.log(input.checked);
@@ -1054,7 +1055,7 @@ var Remote = {
             if (parent.children.length === 2) {
                 parent.insertBefore(self.createChangedWarning(), parent.children[1]);
             }
-            console.log(self.mifloraMonitors)
+            // console.log(self.mifloraMonitors)
             self.closePopup();
         });
         menuDiv.appendChild(save);
@@ -1493,10 +1494,10 @@ var Remote = {
 
     mifloraFriendlyNameCallback: function (payload) {
         var self = this;
-        console.log(`friendly name callback ${payload}`)
-        console.log(payload.result.lookup)
+        // console.log(`friendly name callback ${payload}`)
+        // console.log(payload.result.lookup)
         self.mifloraMonitors = payload.result.lookup
-        console.log(self.mifloraMonitors)
+        // console.log(self.mifloraMonitors)
 
         const loadingIndicator = document.getElementById("flora-monitor-loading");
         const emptyIndicator = document.getElementById("flora-monitor-empty");
@@ -1506,18 +1507,18 @@ var Remote = {
 
         try {
             if (self.mifloraMonitors.length === 0) {
-                console.log("no monitors to show")
+                // console.log("no monitors to show")
                 self.show(emptyIndicator);
                 return;
             }
 
-            console.log("have monitors to show")
+            // console.log("have monitors to show")
             self.hide(emptyIndicator);
             for (var i = 0; i < self.mifloraMonitors.length; i++) {
                 if (self.mifloraMonitors[i].name === "unknown") {
                     continue;
                 }
-                console.log(self.mifloraMonitors[i].name)
+                // console.log(self.mifloraMonitors[i].name)
                 var innerWrapper = document.createElement("div");
                 innerWrapper.className = "module-line";
 
@@ -1533,10 +1534,10 @@ var Remote = {
                 }
 
                 var remove = Remote.createSymbolText("fa fa-fw fa-times-circle", this.translate("DELETE_ENTRY"), function (event) {
-                    // var i = event.currentTarget.parentNode.firstChild.id.replace("edit-monitor-", "");
-                    // // self.deletedModules.push(parseInt(i));
-                    // var thisElement = event.currentTarget;
-                    // thisElement.parentNode.parentNode.removeChild(thisElement.parentNode);
+                    const i = event.currentTarget.parentNode.firstChild.id.replace("edit-monitor-", "");
+                    self.mifloraMonitors.splice(i, 1)
+                    const thisElement = event.currentTarget;
+                    thisElement.parentNode.parentNode.removeChild(thisElement.parentNode);
                 }, "span");
                 remove.className += " type-edit";
                 innerWrapper.appendChild(remove);
@@ -1553,7 +1554,7 @@ var Remote = {
     mifloraLoadFriendlyNames: function () {
         var self = this;
 
-        console.log("Loading friendly names...");
+        // console.log("Loading friendly names...");
         this.mifloraMonitors = []
 
         this.loadList("flora-monitor", "mifloraFriendlyNames",
@@ -1563,7 +1564,7 @@ var Remote = {
     loadModulesToUpdate: function () {
         var self = this;
 
-        console.log("Loading modules to update...");
+        // console.log("Loading modules to update...");
 
         // also update mm info notification
         this.sendSocketNotification("REMOTE_ACTION", {data: "mmUpdateAvailable"});
@@ -1614,7 +1615,7 @@ var Remote = {
             var dates = {};
             for (const i in result.data) {
                 dates[new Date(result.data[i])] = function () {
-                    console.log(result.data[i])
+                    // console.log(result.data[i])
                     self.undoConfig(result.data[i])
                 }
             }
@@ -1834,7 +1835,7 @@ var buttons = {
         window.location.hash = "alert-menu";
     },
     "flora-button": function () {
-        console.log("flora button")
+        // console.log("flora button")
         window.location.hash = "flora-menu";
     },
 
@@ -1982,10 +1983,11 @@ var buttons = {
     "miflora-save-config": function () {
         Remote.mifloraSaveConfig();
     },
-    // "flora-friendly-button": function () {
-    //     console.log("sending friendly request")
-    //     Remote.mifloraLoadFriendlyNames();
-    // },
+
+    "miflora-undo-config": function () {
+      Remote.mifloraLoadFriendlyNames();
+    },
+
 };
 
 // Initialize socket connection
