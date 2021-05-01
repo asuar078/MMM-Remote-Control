@@ -18,8 +18,10 @@ const bodyParser = require("body-parser");
 const express = require("express");
 const _ = require("lodash");
 
-var defaultModules = require(path.resolve(__dirname + "/../default/defaultmodules.js"));
-var miflora = require(path.resolve(__dirname + "/../MMM-miflora/miflora_poller.js"));
+const defaultModules = require(path.resolve(__dirname + "/../default/defaultmodules.js"));
+const miflora = require(path.resolve(__dirname + "/../MMM-miflora/miflora_poller.js"));
+const networkHelper = require(path.resolve("./modules/MMM-Remote-Control/network_helper.js"))
+
 
 Module = {
     configDefaults: {},
@@ -1111,6 +1113,10 @@ module.exports = NodeHelper.create(Object.assign({
                 self.sendSocketNotification("LOAD_PORT", self.configOnHd.port ? self.configOnHd.port : '');
                 // check if we have got saved default settings
                 self.loadDefaultSettings();
+            }
+            if (notification === "GET_IP_ADDRESSES") {
+                // module started, answer with current ip addresses
+                self.sendSocketNotification("GET_IP_ADDRESSES", networkHelper.getNetworkIP());
             }
             if (notification === "REMOTE_ACTION") {
                 if ("action" in payload) {

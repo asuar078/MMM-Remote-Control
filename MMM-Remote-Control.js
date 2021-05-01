@@ -19,22 +19,35 @@ Module.register("MMM-Remote-Control", {
     },
 
     // Define start sequence.
-    start: function() {
+    start: function () {
         Log.info("Starting module: " + this.name);
 
         this.settingsVersion = 2;
 
-        this.addresses = [];
+        this.addresses = {};
         this.port = '';
 
         this.brightness = 100;
+
+        this.updateIpAddress();
+        this.scanInterval = setInterval(
+            this.updateIpAddress.bind(this),
+            30 * 1000);
     },
 
-    getStyles: function() {
-        return ["remote-control.css"];
+    getStyles: function () {
+        return ["remote-control.css", "MMM-Remote-Control.css"];
     },
 
-    notificationReceived: function(notification, payload, sender) {
+    getScripts: function() {
+        return ["qrcode.min.js"];
+    },
+
+    updateIpAddress: function () {
+        this.sendSocketNotification("GET_IP_ADDRESSES");
+    },
+
+    notificationReceived: function (notification, payload, sender) {
         Log.log(this.name + " received a module notification: " + notification);
         if (notification === "DOM_OBJECTS_CREATED") {
             this.sendSocketNotification("REQUEST_DEFAULT_SETTINGS");
@@ -52,12 +65,18 @@ Module.register("MMM-Remote-Control", {
     },
 
     // Override socket notification handler.
-    socketNotificationReceived: function(notification, payload) {
+    socketNotificationReceived: function (notification, payload) {
         Log.log(this.name + " received a socket notification: " + notification);
         if (notification === "UPDATE") {
             this.sendCurrentData();
-        }  
-        if (notification === "IP_ADDRESSES") {
+        }
+        // if (notification === "IP_ADDRESSES") {
+        //     this.addresses = payload;
+        //     if (this.data.position) {
+        //         this.updateDom();
+        //     }
+        // }
+        if (notification === "GET_IP_ADDRESSES") {
             this.addresses = payload;
             if (this.data.position) {
                 this.updateDom();
@@ -69,7 +88,7 @@ Module.register("MMM-Remote-Control", {
                 this.updateDom();
             }
         }
-        
+
         if (notification === "USER_PRESENCE") {
             this.sendNotification(notification, payload);
         }
@@ -82,7 +101,7 @@ Module.register("MMM-Remote-Control", {
             if (settingsVersion < this.settingsVersion) {
                 if (settingsVersion === 0) {
                     // move old data into moduleData
-                    payload = { moduleData: payload, brightness: 100 };
+                    payload = {moduleData: payload, brightness: 100};
                 }
             }
 
@@ -99,9 +118,9 @@ Module.register("MMM-Remote-Control", {
 
             let modules = MM.getModules();
 
-            let options = { lockString: this.identifier };
+            let options = {lockString: this.identifier};
 
-            modules.enumerate(function(module) {
+            modules.enumerate(function (module) {
                 if (hideModules.hasOwnProperty(module.identifier)) {
                     module.hide(0, options);
                 }
@@ -116,7 +135,7 @@ Module.register("MMM-Remote-Control", {
             document.location.reload();
         }
         if (notification === "RESTART") {
-            setTimeout(function() {
+            setTimeout(function () {
                 document.location.reload();
                 console.log('Delayed REFRESH');
             }, 60000);
@@ -131,30 +150,45 @@ Module.register("MMM-Remote-Control", {
             this.sendNotification(notification, payload)
         }
         if (notification === "HIDE" || notification === "SHOW" || notification === "TOGGLE") {
-            let options = { lockString: this.identifier };
-            if (payload.force) { options.force = true; }
+            let options = {lockString: this.identifier};
+            if (payload.force) {
+                options.force = true;
+            }
             let modules = []
-            if(payload.module !== 'all') {
+            if (payload.module !== 'all') {
                 if (!Array.prototype.find) {
                     // https://tc39.github.io/ecma262/#sec-array.prototype.find
-                    Object.defineProperty(Array.prototype,"find",{value:function(r){if(null==this)throw new TypeError('"this" is null or not defined');var e=Object(this),t=e.length>>>0;if("function"!=typeof r)throw new TypeError("predicate must be a function");for(var n=arguments[1],i=0;i<t;){var o=e[i];if(r.call(n,o,i,e))return o;i++}},configurable:!0,writable:!0});
+                    Object.defineProperty(Array.prototype, "find", {
+                        value: function (r) {
+                            if (null == this) throw new TypeError('"this" is null or not defined');
+                            var e = Object(this), t = e.length >>> 0;
+                            if ("function" != typeof r) throw new TypeError("predicate must be a function");
+                            for (var n = arguments[1], i = 0; i < t;) {
+                                var o = e[i];
+                                if (r.call(n, o, i, e)) return o;
+                                i++
+                            }
+                        }, configurable: !0, writable: !0
+                    });
                 }
                 let i = MM.getModules().find(m => {
-                	if(m) {
-                		return (payload.module.includes(m.identifier));
-                	}
+                    if (m) {
+                        return (payload.module.includes(m.identifier));
+                    }
                 });
                 if (!i) {
                     modules = MM.getModules().filter(m => {
-                    	if(m) {
-                        	return (payload.module.includes(m.name));
+                        if (m) {
+                            return (payload.module.includes(m.name));
                         }
                     });
                 } else modules.push(i)
             } else {
                 modules = MM.getModules()
             }
-            if (!modules.length) { return; }
+            if (!modules.length) {
+                return;
+            }
             modules.forEach((mod) => {
                 if (notification === "HIDE" ||
                     (notification === "TOGGLE" && !mod.hidden)) {
@@ -170,7 +204,7 @@ Module.register("MMM-Remote-Control", {
         }
     },
 
-    buildCssContent: function(brightness) {
+    buildCssContent: function (brightness) {
         var css = "";
 
         var defaults = {
@@ -199,7 +233,7 @@ Module.register("MMM-Remote-Control", {
         return css;
     },
 
-    setBrightness: function(newBrightnessValue) {
+    setBrightness: function (newBrightnessValue) {
         if (newBrightnessValue < 10) {
             newBrightnessValue = 10;
         }
@@ -234,7 +268,7 @@ Module.register("MMM-Remote-Control", {
         this.removeOverlay();
     },
 
-    createOverlay: function(brightness) {
+    createOverlay: function (brightness) {
         var overlay = document.getElementById('remote-control-overlay');
         if (!overlay) {
             // if not existing, create overlay
@@ -247,7 +281,7 @@ Module.register("MMM-Remote-Control", {
         overlay.style.backgroundColor = bgColor;
     },
 
-    removeOverlay: function() {
+    removeOverlay: function () {
         var overlay = document.getElementById('remote-control-overlay');
         if (overlay) {
             var parent = document.body;
@@ -255,28 +289,86 @@ Module.register("MMM-Remote-Control", {
         }
     },
 
-    getDom: function() {
-        var wrapper = document.createElement("div");
-        var portToShow = ''
-        if (this.addresses.length === 0) {
-            this.addresses = ["ip-of-your-mirror"];
+    getIpToShow: function () {
+
+        if (this.addresses["eth0"]) {
+            if (this.addresses["eth0"][0]) {
+                return this.addresses["eth0"][0];
+            }
         }
-        switch(this.port) {
-            case '': case '8080': portToShow = ':8080'; break;
-            case '80': portToShow = ''; break;
-            default: portToShow = ':'+this.port; break;
+
+        if (this.addresses["wlan0"]) {
+            if (this.addresses["wlan0"][0]) {
+                return this.addresses["wlan0"][0];
+            }
         }
-        wrapper.innerHTML = "http://" + this.addresses[0] + portToShow +"/remote.html";
-        wrapper.className = "normal xsmall";
-        return wrapper;
+
+        if (this.addresses["wlan1"]) {
+            if (this.addresses["wlan1"][0]) {
+                return this.addresses["wlan1"][0];
+            }
+        }
+
+
+        return "ip-of-your-mirror";
     },
 
-    sendCurrentData: function() {
+    getDom: function () {
+        // const wrapper = document.createElement("div");
+        let portToShow = ''
+        let ipToShow = this.getIpToShow();
+
+        switch (this.port) {
+            case '':
+            case '8080':
+                portToShow = ':8080';
+                break;
+            case '80':
+                portToShow = '';
+                break;
+            default:
+                portToShow = ':' + this.port;
+                break;
+        }
+        const textToShow = "http://" + ipToShow  + portToShow + "/remote.html";
+
+        const wrapperEl = document.createElement("div");
+        wrapperEl.classList.add('qrcode');
+
+        const qrcodeEl  = document.createElement("div");
+        new QRCode(qrcodeEl, {
+            text: textToShow,
+            width: 100,
+            height: 100,
+            colorDark : "#fff",
+            colorLight : "#000",
+            correctLevel : QRCode.CorrectLevel.H
+        });
+
+        const imageEl  = document.createElement("div");
+        imageEl.classList.add('qrcode_image');
+        imageEl.appendChild(qrcodeEl);
+
+        wrapperEl.appendChild(imageEl);
+
+        // const textEl = document.createElement("div");
+        // textEl.classList.add('qrcode_text');
+        // textEl.innerHTML = textToShow;
+        // wrapperEl.appendChild(textEl);
+
+        return wrapperEl;
+
+        // wrapper.innerHTML = "http://" + ipToShow  + portToShow + "/remote.html";
+        // wrapper.className = "normal xsmall";
+        // return wrapper;
+    },
+
+    sendCurrentData: function () {
         var self = this;
 
         var modules = MM.getModules();
         var currentModuleData = [];
-        modules.enumerate(function(module) {
+        modules.enumerate(function (module) {
             let modData = Object.assign({}, module.data);
             modData.hidden = module.hidden;
             modData.lockStrings = module.lockStrings;
