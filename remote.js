@@ -91,9 +91,16 @@ var Remote = {
                     if (payload.query.data === "mifloraFriendlyNames") {
                         this.mifloraFriendlyNameCallback(payload)
                     }
+                    if (payload.query.data === "wifiNetworks") {
+                        this.wifiListCallback(payload)
+                    }
                     if (payload.query.data === "miflora_config") {
                         this.mifloraConfigCallback(payload)
                     }
+                    if (payload.query.data === "wifi_connect") {
+                        this.wifiConnectCallback(payload)
+                    }
+
                 }
             }
             if ("code" in payload && payload.code === "restart") {
@@ -329,6 +336,9 @@ var Remote = {
         }
         if (newMenu === "flora-menu") {
             this.mifloraLoadFriendlyNames();
+        }
+        if (newMenu === "wifi-menu") {
+            this.wifiGetNetworks();
         }
 
 
@@ -1067,6 +1077,47 @@ var Remote = {
         wrapper.appendChild(line);
     },
 
+    appendWifiMenu: function (index, wrapper) {
+        var self = this;
+
+        // var menuElement = self.createSymbolText("small fa fa-fw fa-navicon", self.translate("MENU"), function (event) {
+        //     var elements = document.getElementsByClassName("sub-menu");
+        //     for (var i = 0; i < elements.length; i++) {
+        //         var element = elements[i];
+        //         if (self.hasClass(element, "hidden")) {
+        //             element.className = element.className.replace("hidden", "");
+        //         } else {
+        //             element.className = element.className + " hidden";
+        //         }
+        //     }
+        // });
+        // menuElement.className += " fixed-size";
+        // wrapper.appendChild(menuElement);
+        //
+        // var menuDiv = document.createElement("div");
+        // menuDiv.className = "fixed-size sub-menu";
+
+        // var undo = self.createSymbolText("fa fa-fw fa-undo", self.translate("RESET"), function (event) {
+        //     self.createMifloraPopup(index);
+        // });
+        // menuDiv.appendChild(undo);
+        const enter = self.createSymbolText("fa fa-fw fa-save", "ENTER", function (event) {
+            const password = document.getElementById("wifi-password-input").value
+            console.log(`ssid: ${self.wifiNetworks[index].ssid} pass: ${password}`)
+
+            self.wifiEnterPassword(self.wifiNetworks[index].ssid, password)
+            self.closePopup();
+        });
+        // menuDiv.appendChild(enter);
+
+        // wrapper.appendChild(menuDiv);
+        wrapper.appendChild(enter);
+
+        var line = document.createElement("header");
+        line.className = "header";
+        wrapper.appendChild(line);
+    },
+
     appendConfigMenu: function (index, wrapper) {
         var self = this;
 
@@ -1248,6 +1299,41 @@ var Remote = {
         self.appendMifloraMenu(index, wrapper)
 
         wrapper.append(self.createObjectGUI("miflora-name-input", "Friendly Name", self.currentConfig.name));
+
+        this.showPopup();
+    },
+
+    createWifiPopup: function (index) {
+        var self = this;
+        if (typeof index === "string") {
+            index = parseInt(index);
+        }
+
+        const data = self.wifiNetworks[index];
+
+        self.currentConfig = data;
+        if (!("header" in self.currentConfig)) {
+            self.currentConfig.header = "";
+        }
+        if (!("position" in self.currentConfig)) {
+            self.currentConfig.position = "";
+        }
+
+        const wrapper = this.getPopupContent();
+
+        let name = document.createElement("div");
+        name.innerHTML = data.ssid
+        name.className = "bright title medium";
+        wrapper.appendChild(name);
+
+        let n = document.createElement("div");
+        n.innerHTML = data.ssid + " (#" + (index + 1) + ")";
+        n.className = "subtitle xsmall dimmed";
+        wrapper.appendChild(n);
+
+        self.appendWifiMenu(index, wrapper)
+
+        wrapper.append(self.createObjectGUI("wifi-password-input", "Password", ""));
 
         this.showPopup();
     },
@@ -1492,6 +1578,62 @@ var Remote = {
         }
     },
 
+    wifiListCallback: function (payload) {
+        const self = this;
+        self.wifiNetworks = payload.result.networks
+        // console.log(self.wifiNetworks)
+        // console.log(self.wifiNetworks.length)
+
+        const loadingIndicator = document.getElementById("wifi-list-loading");
+        const emptyIndicator = document.getElementById("wifi-list-empty");
+        let parent = document.getElementById("wifi-list-results");
+
+        self.hide(loadingIndicator);
+
+        try {
+            if (self.wifiNetworks.length === 0) {
+                // console.log("no networks found")
+                self.show(emptyIndicator);
+                return;
+            }
+
+            // console.log("have networks to show")
+            self.hide(emptyIndicator);
+            for (let i = 0; i < self.wifiNetworks.length; i++) {
+                // console.log(self.wifiNetworks[i].ssid)
+                const innerWrapper = document.createElement("div");
+                innerWrapper.className = "module-line";
+
+                let symbol = "fa fa-circle-o"
+                if (self.wifiNetworks[i].connected) {
+                    symbol = "fa fa-circle"
+                }
+
+                const networkBox = self.createSymbolText(symbol, self.wifiNetworks[i].ssid, function (event) {
+                    let i = event.currentTarget.id.replace("wifi-network-", "");
+                    self.createWifiPopup(i);
+                }, "span");
+
+                networkBox.className = "button";
+                if (self.wifiNetworks[i].connected) {
+                    networkBox.className += " bright";
+                }
+                networkBox.id = "wifi-network-" + i;
+                innerWrapper.appendChild(networkBox);
+
+                if (self.wifiNetworks[i].connected) {
+                    let networkBox = self.createSymbolText("fa fa-fw fa-info-circle", "connected");
+                    innerWrapper.appendChild(networkBox);
+                }
+
+                parent.appendChild(innerWrapper);
+            }
+        } catch (e) {
+            self.show(emptyIndicator);
+        }
+
+    },
+
     mifloraFriendlyNameCallback: function (payload) {
         var self = this;
         // console.log(`friendly name callback ${payload}`)
@@ -1559,6 +1701,16 @@ var Remote = {
 
         this.loadList("flora-monitor", "mifloraFriendlyNames",
             this.mifloraFriendlyNameCallback);
+    },
+
+    wifiGetNetworks: function () {
+        var self = this;
+
+        // console.log("Loading friendly names...");
+        this.wifiNetworks = []
+
+        this.loadList("wifi-list", "wifiNetworks",
+            this.wifiListCallback);
     },
 
     loadModulesToUpdate: function () {
@@ -1676,8 +1828,6 @@ var Remote = {
     },
 
     mifloraSaveConfig: function () {
-        var self = this;
-
         // prevent saving before current saving is finished
         if (this.saving) {
             return;
@@ -1687,7 +1837,7 @@ var Remote = {
         saveButton.className = saveButton.className.replace(" highlight", "");
         this.saving = true;
         this.setStatus("loading");
-        var configData = this.mifloraMonitors
+        const configData = this.mifloraMonitors;
         this.sendSocketNotification("MIFLORA_NEW_CONFIG", configData);
     },
 
@@ -1701,6 +1851,30 @@ var Remote = {
         }
         self.saving = false;
         self.mifloraLoadFriendlyNames()
+    },
+
+    wifiEnterPassword: function (ssid, password) {
+        // prevent saving before current saving is finished
+        if (this.saving) {
+            return;
+        }
+
+        this.saving = true;
+        this.setStatus("loading");
+        this.sendSocketNotification("WIFI_CONNECT", {ssid: ssid, password: password});
+    },
+
+    wifiConnectCallback: function (payload) {
+        const self = this;
+        // console.log(`got back ${payload.result}`)
+
+        if (payload.result) {
+            self.offerReload(self.translate("DONE"));
+        } else {
+            self.setStatus("error");
+        }
+        self.saving = false;
+        self.wifiGetNetworks()
     },
 
     onTranslationsLoaded: function () {
@@ -1811,9 +1985,9 @@ var buttons = {
 
         self.setStatus(false, false, wrapper);
     },
-    "mirror-link-button": function () {
-        window.open("/", "_blank");
-    },
+    // "mirror-link-button": function () {
+    //     window.open("/", "_blank");
+    // },
     "classes-button": function () {
         window.location.hash = "classes-menu";
     },
@@ -1833,6 +2007,9 @@ var buttons = {
     },
     "alert-button": function () {
         window.location.hash = "alert-menu";
+    },
+    "wifi-button": function () {
+        window.location.hash = "wifi-menu";
     },
     "flora-button": function () {
         // console.log("flora button")

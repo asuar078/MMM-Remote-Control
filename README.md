@@ -69,6 +69,27 @@ You can also add multiple devices in an IP range (e.g. all devices with `192.168
 
 Note: If your user does not have `sudo` rights, the shutdown does not work (it *should* work for everyone who did not change anything on this matter).
 
+### Allow WiFi Control
+
+To allow control of the wlan0 interface the following must be done:
+
+1. sudo apt-get install network-manager
+2. sudo vim /etc/NetworkManager/NetworkManager.conf
+3. Change "managed=false" to "managed=true"
+4. sudo service network-manager restart
+5. Sudo reboot
+
+if dhcpcd enabled it must be disabled
+
+```bash
+sudo systemctl disable dhcpcd
+sudo systemctl stop dhcpcd
+```
+
+### WiFi AP for Wlan1
+
+
+
 ### Update
 
 Update this module by navigating into its folder on the command line and using `git pull`:

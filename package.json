@@ -22,8 +22,9 @@
   "homepage": "git+https://github.com/jopyth/MMM-Remote-Control#readme",
   "dependencies": {
     "body-parser": "latest",
-    "simple-git": "latest",
     "lodash": "latest",
+    "node-wifi": "^2.0.14",
+    "simple-git": "latest",
     "uuid": "^3.3.2"
   }
 }

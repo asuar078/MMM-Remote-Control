@@ -576,10 +576,16 @@ module.exports = NodeHelper.create(Object.assign({
                 return;
             }
             if (query.data === "mifloraFriendlyNames") {
-                console.log('node helper friendly name request')
                 const friendly = miflora.getFriendlyLookup()
-                console.log(friendly)
                 this.sendResponse(res, undefined, { query: query, result: friendly });
+                return;
+            }
+            if (query.data === "wifiNetworks") {
+                console.log('node helper wifi network request')
+                networkHelper.scanWithCurrentConnection("wlan1", (networks) => {
+                    // console.log(networks)
+                    this.sendResponse(res, undefined, { query: query, result: {networks} });
+                })
                 return;
             }
             // Unknown Command, Return Error
@@ -1155,6 +1161,13 @@ module.exports = NodeHelper.create(Object.assign({
             }
             if (notification === "MIFLORA_NEW_CONFIG") {
                 this.mifloraConfigPost({ data: "miflora_config" }, payload, {isSocket: true});
+            }
+            if (notification === "WIFI_CONNECT") {
+                // console.log(`trying to connect to ${payload.ssid}, ${payload.password}`)
+                networkHelper.sudoConnect("wlan1", payload, (connected) => {
+                    console.log(`Connection status: ${connected}`)
+                    this.sendResponse({isSocket: true}, undefined, { query: {data: "wifi_connect"}, result: connected });
+                })
             }
             if (notification === "REMOTE_CLIENT_CONNECTED") {
                 this.sendSocketNotification("REMOTE_CLIENT_CONNECTED");
