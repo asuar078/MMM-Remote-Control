@@ -297,15 +297,15 @@ Module.register("MMM-Remote-Control", {
             }
         }
 
-        if (this.addresses["wlan0"]) {
-            if (this.addresses["wlan0"][0]) {
-                return this.addresses["wlan0"][0];
-            }
-        }
-
         if (this.addresses["wlan1"]) {
             if (this.addresses["wlan1"][0]) {
                 return this.addresses["wlan1"][0];
+            }
+        }
+
+        if (this.addresses["wlan0"]) {
+            if (this.addresses["wlan0"][0]) {
+                return this.addresses["wlan0"][0];
             }
         }
 
@@ -351,10 +351,10 @@ Module.register("MMM-Remote-Control", {
 
         wrapperEl.appendChild(imageEl);
 
-        // const textEl = document.createElement("div");
-        // textEl.classList.add('qrcode_text');
-        // textEl.innerHTML = textToShow;
-        // wrapperEl.appendChild(textEl);
+        const textEl = document.createElement("div");
+        textEl.classList.add('qrcode_text');
+        textEl.innerHTML = textToShow;
+        wrapperEl.appendChild(textEl);
 
         return wrapperEl;
 

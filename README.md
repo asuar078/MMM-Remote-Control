@@ -86,6 +86,13 @@ sudo systemctl disable dhcpcd
 sudo systemctl stop dhcpcd
 ```
 
+For NetworkManager to run dnsmasq as a local caching DNS server, edit/create /etc/NetworkManager/NetworkManager.conf and add the following
+
+```bash
+[main]
+dns=dnsmasq
+```
+
 ### WiFi AP for Wlan1
 
 
